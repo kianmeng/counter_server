@@ -34,7 +34,7 @@ class CounterServerTest(unittest.TestCase):
 
         client = self._create_client()
         client.send('hello world')
-        result = client.recv(2014)
+        result = client.recv(1024)
         client.close()
         self.assertEqual('HELLO WORLD', result)
 
@@ -44,7 +44,7 @@ class CounterServerTest(unittest.TestCase):
 
         client = self._create_client()
         client.send('world hello')
-        result = client.recv(2014)
+        result = client.recv(1024)
         client.close()
         self.assertEqual('WORLD HELLO', result)
 
