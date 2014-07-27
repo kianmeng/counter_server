@@ -14,7 +14,7 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
         return
 
 
-class CounterServer(SocketServer.TCPServer):
+class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     """The wrapper for the TCPServer class so we can use it for unit testing
     and additional features.
 
@@ -24,6 +24,9 @@ class CounterServer(SocketServer.TCPServer):
 
     # to prevent "error: [Errno 98] Address already in use" error
     allow_reuse_address = True
+
+    # kill all spawned threads
+    daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass):
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
