@@ -22,6 +22,9 @@ class CounterServer(SocketServer.TCPServer):
     To kill the server, type Ctrl-C.
     """
 
+    # to prevent "error: [Errno 98] Address already in use" error
+    allow_reuse_address = True
+
     def __init__(self, server_address, RequestHandlerClass):
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
 
