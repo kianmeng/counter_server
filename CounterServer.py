@@ -9,10 +9,16 @@ DEFAULT_PORT = 5263
 class CounterRequestHandler(SocketServer.BaseRequestHandler):
     """The request handler class for our counter server."""
 
+    def setup(self):
+        print("%s:%s connected" % self.client_address)
+
     def handle(self):
         data = self.request.recv(1024)
         self.request.send(data.upper())
         return
+
+    def finish(self):
+        print("%s:%s disconnected" % self.client_address)
 
 
 class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
