@@ -14,12 +14,38 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
         print("%s:%s connected" % self.client_address)
 
     def handle(self):
-        data = self.request.recv(1024)
-        self.request.send(data.upper())
-        return
+        data = self.request.recv(1024).strip().split()
+        if not data:
+            self.request.send("400 Bad Request\n")
+            self.request.close()
+            return
+
+        # dispatching command to its corresponding method
+        cmd = data[0]
+        args = data[1:] if len(data) > 1 else []
+        func = getattr(self, cmd, False)
+        if not func:
+            self.request.send("400 Bad Request\n")
+            self.request.close()
+            return
+        else:
+            func(*args)
+            self.request.close()
 
     def finish(self):
         print("%s:%s disconnected" % self.client_address)
+
+    def CREATE_COUNTER(self, *args):
+        self.request.send("201 CREATED\n")
+
+    def INCREMENT_COUNTER(self, *args):
+        self.request.send("201 CREATED\n")
+
+    def GET_COUNTER_VALUES(self, *args):
+        self.request.send("200 OK\n")
+
+    def AVERAGE_COUNTER_VALUE(self, *args):
+        self.request.send("200 OK\n")
 
 
 class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
