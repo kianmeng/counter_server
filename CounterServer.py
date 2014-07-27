@@ -1,5 +1,6 @@
 import sys
 import threading
+import time
 import SocketServer
 
 DEFAULT_HOST = 'localhost'
@@ -42,14 +43,17 @@ class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 def main():
     server = CounterServer((DEFAULT_HOST, DEFAULT_PORT), CounterRequestHandler)
     # listen for connection until Ctrl-C
-    while True:
-        try:
-            # spawn a new thread for each request
-            thread = threading.Thread(target=server.serve_forever)
-            thread.daemon = True
-            thread.start()
-        except KeyboardInterrupt:
-            sys.exit(0)
+    try:
+        # spawn a new thread for each request
+        thread = threading.Thread(target=server.serve_forever)
+        thread.daemon = True  # TODO: doesn't let thread to clean up
+        thread.start()
+        # to prevent KeyboardInterrupt from being ignored where you've to
+        # Ctrl-C multiple times to kill the server.
+        while True:
+            time.sleep(100)
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
