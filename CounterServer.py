@@ -26,9 +26,12 @@ class CounterServer(SocketServer.TCPServer):
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass)
 
 
-if __name__ == '__main__':
+def main():
     server = CounterServer((DEFAULT_HOST, DEFAULT_PORT), CounterRequestHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         sys.exit(0)
+
+if __name__ == '__main__':
+    main()
