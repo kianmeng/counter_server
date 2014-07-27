@@ -1,3 +1,4 @@
+import sys
 import SocketServer
 
 DEFAULT_HOST = 'localhost'
@@ -27,4 +28,7 @@ class CounterServer(SocketServer.TCPServer):
 
 if __name__ == '__main__':
     server = CounterServer((DEFAULT_HOST, DEFAULT_PORT), CounterRequestHandler)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        sys.exit(0)
