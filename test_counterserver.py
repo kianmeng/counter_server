@@ -144,6 +144,24 @@ class CounterServerTest(unittest.TestCase):
         result = self._send_request_command('AVERAGE_COUNTER_VALUE nose')
         self.assertEqual('200 Ok 3\n', result)
 
+    def test_average_counter_value_within_date_range(self):
+        """Test AVERAGE_COUNTER_VALUE within date range."""
+
+        result = self._send_request_command('CREATE_COUNTER nose')
+        self.assertEqual('200 Ok\n', result)
+
+        start_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
+        max = 2 
+        for i in range(0, max):
+            time.sleep(i * 60)
+            result = self._send_request_command('INCREMENT_COUNTER nose')
+            self.assertEqual('200 Ok\n', result)
+
+        end_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
+
+        result = self._send_request_command('AVERAGE_COUNTER_VALUE nose %s %s' % (start_dt, end_dt))
+        self.assertEqual('200 Ok 1\n', result)
+
     def test_average_counter_value_missing_label(self):
         """Test AVERAGE_COUNTER_VALUE command with missing label."""
 

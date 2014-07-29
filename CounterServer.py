@@ -123,7 +123,17 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
 
         # if not period (from_date till to_date) found, average all values.
         counter = self.store[label]
-        average = sum(counter.values()) / len(counter)
+        if len(args) == 3:
+                sdate = datetime.datetime.strptime(args[1], '%Y-%m-%d/%H:%M:%S').replace(second=0)
+                edate = datetime.datetime.strptime(args[2], '%Y-%m-%d/%H:%M:%S').replace(second=0)
+                stime = int(time.mktime(sdate.timetuple()))
+                etime = int(time.mktime(edate.timetuple()))
+
+                count_set = [v for k, v in counter.iteritems() if k >= stime and k <= etime]
+                average = sum(count_set) / len(count_set)
+        else:
+            average = sum(counter.values()) / len(counter)
+
         self.request.send("200 Ok %d\n" % average)
 
 
