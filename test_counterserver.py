@@ -105,6 +105,24 @@ class CounterServerTest(unittest.TestCase):
         result = self._send_request_command('GET_COUNTER_VALUES nose')
         self.assertEqual('200 Ok %d\n' % max, result)
 
+    def test_get_counter_values_within_date_range(self):
+        """Test GET_COUNTER_VALUES within date range."""
+
+        result = self._send_request_command('CREATE_COUNTER nose')
+        self.assertEqual('200 Ok\n', result)
+
+        start_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
+        max = 2 
+        for i in range(0, max):
+            time.sleep(i * 60)
+            result = self._send_request_command('INCREMENT_COUNTER nose')
+            self.assertEqual('200 Ok\n', result)
+
+        end_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
+
+        result = self._send_request_command('GET_COUNTER_VALUES nose %s %s' % (start_dt, end_dt))
+        self.assertEqual('200 Ok 1 1\n', result)
+
     def test_increment_counter_within_multiple_minutes(self):
         """Test INCREMENT_COUNTER commands within multiple minutes."""
 

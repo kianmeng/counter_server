@@ -98,7 +98,16 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
         if len(counter) == 0:
             count = 0
         else:
-            count = counter[counter.keys()[-1]]
+            if len(args) == 3:
+                sdate = datetime.datetime.strptime(args[1], '%Y-%m-%d/%H:%M:%S').replace(second=0)
+                edate = datetime.datetime.strptime(args[2], '%Y-%m-%d/%H:%M:%S').replace(second=0)
+                stime = int(time.mktime(sdate.timetuple()))
+                etime = int(time.mktime(edate.timetuple()))
+
+                count_set = ((str(v)) for k, v in self.store[label].iteritems() if k >= stime and k <= etime)
+                count = ' '.join(count_set)
+            else:
+                count = counter[counter.keys()[-1]]
 
         self.request.send("200 Ok %s\n" % count)
 
