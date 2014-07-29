@@ -1,3 +1,4 @@
+import datetime
 import shelve
 import sys
 import threading
@@ -65,7 +66,9 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
             return
 
         # rounded to the nearest minute
-        ts = int(time.time() / 60)
+
+        dt = datetime.datetime.now().replace(second=0)
+        ts = int(time.mktime(dt.timetuple()))
 
         if ts in self.store[label]:
             # check if we've created the counter before within that minute
