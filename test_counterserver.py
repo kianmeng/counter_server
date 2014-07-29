@@ -1,9 +1,9 @@
 import os
+import shelve
 import socket
 import threading
+import time
 import unittest
-
-from awesome_print import ap
 
 from CounterServer import *
 
@@ -105,11 +105,38 @@ class CounterServerTest(unittest.TestCase):
         result = self._send_request_command('GET_COUNTER_VALUES nose')
         self.assertEqual('200 Ok %d\n' % max, result)
 
+    def test_increment_counter_within_multiple_minutes(self):
+        """Test INCREMENT_COUNTER commands within multiple minutes."""
+
+        self.test_increment_counter_multiple_times_within_minute()
+
+        # counter's value resets every minute.
+        time.sleep(60)
+
+        result = self._send_request_command('INCREMENT_COUNTER nose')
+        self.assertEqual('200 Ok\n', result)
+
+        store = shelve.open(DEFAULT_FILE)
+        self.assertEqual(2, len(store['nose']))
+
     def test_average_counter_value(self):
         """Test AVERAGE_COUNTER_VALUE command."""
 
+        self.test_increment_counter_within_multiple_minutes()
+        result = self._send_request_command('AVERAGE_COUNTER_VALUE nose')
+        self.assertEqual('200 Ok 3\n', result)
+
+    def test_average_counter_value_missing_label(self):
+        """Test AVERAGE_COUNTER_VALUE command with missing label."""
+
         result = self._send_request_command('AVERAGE_COUNTER_VALUE')
-        self.assertEqual('200 Ok\n', result)
+        self.assertEqual('401 Bad Request: Missing label\n', result)
+
+    def test_average_counter_value_unknown_label(self):
+        """Test AVERAGE_COUNTER_VALUE command with unknown label."""
+
+        result = self._send_request_command('AVERAGE_COUNTER_VALUE barfoo')
+        self.assertEqual('403 Bad Request: Label not found\n', result)
 
 if __name__ == '__main__':
     # for those not using nose / nosetests

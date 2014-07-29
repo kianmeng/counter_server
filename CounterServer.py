@@ -100,7 +100,19 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
         self.request.send("200 Ok %s\n" % count)
 
     def AVERAGE_COUNTER_VALUE(self, *args):
-        self.request.send("200 Ok\n")
+        if not args:
+            self.request.send("401 Bad Request: Missing label\n")
+            return
+
+        label = args[0]
+        if label not in self.store:
+            self.request.send("403 Bad Request: Label not found\n")
+            return
+
+        # if not period (from_date till to_date) found, average all values.
+        counter = self.store[label]
+        average = sum(counter.values()) / len(counter)
+        self.request.send("200 Ok %d\n" % average)
 
 
 class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
