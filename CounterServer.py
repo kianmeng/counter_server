@@ -13,7 +13,9 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
     """The request handler class for our counter server."""
 
     def setup(self):
-        self.store = shelve.open(DEFAULT_FILE)
+        # enable writeback so we can write all mutated changes back to the
+        # file.
+        self.store = shelve.open(DEFAULT_FILE, writeback=True)
         print("%s:%s connected" % self.client_address)
 
     def handle(self):
@@ -45,21 +47,60 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
             return
 
         label = args[0]
-        if self.store.has_key(label):
+        if label in self.store:
             self.request.send("402 Bad Request: Duplicate label\n")
             return
 
         self.store[label] = {}
-        self.request.send("201 CREATED\n")
+        self.request.send("200 Ok\n")
 
     def INCREMENT_COUNTER(self, *args):
-        self.request.send("201 CREATED\n")
+        if not args:
+            self.request.send("401 Bad Request: Missing label\n")
+            return
+
+        label = args[0]
+        if label not in self.store:
+            self.request.send("403 Bad Request: Label not found\n")
+            return
+
+        # rounded to the nearest minute
+        ts = int(time.time() / 60)
+
+        if ts in self.store[label]:
+            # check if we've created the counter before within that minute
+            count = self.store[label][ts]
+            self.store[label][ts] = count + 1
+        else:
+            # increate the counter for that particular minute
+            self.store[label][ts] = 1
+
+        # we need to sync immediately, otherwise the unit test
+        # test_increment_counter() will fail.
+        self.store.sync()
+        self.request.send("200 Ok\n")
 
     def GET_COUNTER_VALUES(self, *args):
-        self.request.send("200 OK\n")
+        if not args:
+            self.request.send("401 Bad Request: Missing label\n")
+            return
+
+        label = args[0]
+        if label not in self.store:
+            self.request.send("403 Bad Request: Label not found\n")
+            return
+
+        # if not period (from_date till to_date) found, just get the last item
+        counter = self.store[label]
+        if len(counter) == 0:
+            count = 0
+        else:
+            count = counter[counter.keys()[-1]]
+
+        self.request.send("200 Ok %s\n" % count)
 
     def AVERAGE_COUNTER_VALUE(self, *args):
-        self.request.send("200 OK\n")
+        self.request.send("200 Ok\n")
 
 
 class CounterServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
