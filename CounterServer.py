@@ -1,3 +1,4 @@
+import shelve
 import sys
 import threading
 import time
@@ -5,19 +6,20 @@ import SocketServer
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5263
+DEFAULT_FILE = 'counter.shelve'
 
 
 class CounterRequestHandler(SocketServer.BaseRequestHandler):
     """The request handler class for our counter server."""
 
     def setup(self):
+        self.store = shelve.open(DEFAULT_FILE)
         print("%s:%s connected" % self.client_address)
 
     def handle(self):
         data = self.request.recv(1024).strip().split()
         if not data:
             self.request.send("400 Bad Request\n")
-            self.request.close()
             return
 
         # dispatching command to its corresponding method
@@ -26,16 +28,28 @@ class CounterRequestHandler(SocketServer.BaseRequestHandler):
         func = getattr(self, cmd, False)
         if not func:
             self.request.send("400 Bad Request\n")
-            self.request.close()
             return
         else:
             func(*args)
-            self.request.close()
 
     def finish(self):
+        self.store.close()
+        self.request.close()
         print("%s:%s disconnected" % self.client_address)
 
     def CREATE_COUNTER(self, *args):
+        """Create a counter on our data storage based on the label given."""
+
+        if not args:
+            self.request.send("401 Bad Request: Missing label\n")
+            return
+
+        label = args[0]
+        if self.store.has_key(label):
+            self.request.send("402 Bad Request: Duplicate label\n")
+            return
+
+        self.store[label] = {}
         self.request.send("201 CREATED\n")
 
     def INCREMENT_COUNTER(self, *args):

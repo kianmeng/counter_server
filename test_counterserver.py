@@ -1,3 +1,4 @@
+import os
 import socket
 import threading
 import unittest
@@ -22,6 +23,11 @@ class CounterServerTest(unittest.TestCase):
         self.server.shutdown()
         self.server.server_close()
 
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up after all test cases. Only available for Python >= 2.7."""
+        os.remove(DEFAULT_FILE)
+
     def _create_client(self):
         """Create multiple client instances."""
 
@@ -38,14 +44,32 @@ class CounterServerTest(unittest.TestCase):
         client.close()
         self.assertEqual('400 Bad Request\n', result)
 
-    def test_create_counter(self):
-        """Test CREATE_COUNTER command."""
+    def test_create_counter_without_label(self):
+        """Test CREATE_COUNTER command without label."""
 
         client = self._create_client()
         client.send('CREATE_COUNTER')
         result = client.recv(1024)
         client.close()
+        self.assertEqual('401 Bad Request: Missing label\n', result)
+
+    def test_create_counter(self):
+        """Test CREATE_COUNTER command."""
+
+        client = self._create_client()
+        client.send('CREATE_COUNTER foobar')
+        result = client.recv(1024)
+        client.close()
         self.assertEqual('201 CREATED\n', result)
+
+    def test_create_duplicate_counter(self):
+        """Test CREATE_COUNTER command with duplicate label."""
+
+        client = self._create_client()
+        client.send('CREATE_COUNTER foobar')
+        result = client.recv(1024)
+        client.close()
+        self.assertEqual('402 Bad Request: Duplicate label\n', result)
 
     def test_increment_counter(self):
         """Test INCREMENT_COUNTER command."""
