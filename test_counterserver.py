@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import shelve
 import socket
@@ -112,7 +114,7 @@ class CounterServerTest(unittest.TestCase):
         self.assertEqual('200 Ok\n', result)
 
         start_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
-        max = 2 
+        max = 2
         for i in range(0, max):
             time.sleep(i * 60)
             result = self._send_request_command('INCREMENT_COUNTER nose')
@@ -151,7 +153,7 @@ class CounterServerTest(unittest.TestCase):
         self.assertEqual('200 Ok\n', result)
 
         start_dt = datetime.datetime.now().replace(second=0).strftime('%Y-%m-%d/%H:%M:%S')
-        max = 2 
+        max = 2
         for i in range(0, max):
             time.sleep(i * 60)
             result = self._send_request_command('INCREMENT_COUNTER nose')
